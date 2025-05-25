@@ -2,8 +2,8 @@
 #define FILE_READER_H
 
 typedef enum {
-    FILE_READ_SUCCESS=0,
-    FILE_READ_ERROR,
+    FILE_READER_SUCCESS=0,
+    FILE_READER_ERROR,
 } file_read_status_t;
 
 class FileReader {

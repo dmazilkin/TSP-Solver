@@ -8,8 +8,8 @@ file_read_status_t FileReader::read(std::string path, std::string &content) {
 
     if (!file.is_open()) {
         std::cout << "ERROR! File not found: " << path << "!" << std::endl;
-        return FILE_READ_ERROR;
+        return FILE_READER_ERROR;
     }
 
-    return FILE_READ_SUCCESS;
+    return FILE_READER_SUCCESS;
 }
