@@ -7,7 +7,7 @@ ArgParser::ArgParser(void) {
     output = "";
 }
 
-arg_parser_statur_t ArgParser::parse(int argc, char* argv[]) {
+arg_parser_status_t ArgParser::parse(int argc, char* argv[]) {
     for (int i = 1; i < argc; i++) {
         if (argv[i][0] == '-') {
             if (argv[i][1] == 'i') {
@@ -33,8 +33,8 @@ arg_parser_statur_t ArgParser::parse(int argc, char* argv[]) {
     }
 
     if (!output.compare("")) {
-      std::cout << "ERROR! Output file was not specified!" << std::endl;
-      return ARG_PARSER_ERROR;
+        std::cout << "ERROR! Output file was not specified!" << std::endl;
+        return ARG_PARSER_ERROR;
     }
 
     return ARG_PARSER_SUCCESS;
