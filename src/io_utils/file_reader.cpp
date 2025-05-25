@@ -17,6 +17,7 @@ file_read_status_t FileReader::read_cfg(std::string path, std::string &config) {
     }
 
     std::string cfg;
+
     while (std::getline(file, cfg, '=')) {
 
         if (cfg == "data") {
@@ -25,10 +26,6 @@ file_read_status_t FileReader::read_cfg(std::string path, std::string &config) {
 
         if (cfg == "type") {
             std::getline(file, line_type);
-        }
-
-        if (cfg == "size") {
-            std::getline(file, line_size);
         }
     }
 
@@ -45,6 +42,18 @@ file_read_status_t FileReader::read_content(std::string path, std::string &conte
         return FILE_READER_ERROR;
     }
 
+    std::string cfg;
+    std::string value;
+
+    while (std::getline(file, cfg)) {
+        if (cfg == line_data) {
+            while (std::getline(file, value)) {
+                std::getline(file, value);
+                content += value + '\n';
+            }
+        }
+    }
+
     file.close();
 
     return FILE_READER_SUCCESS;
@@ -56,8 +65,4 @@ std::string FileReader::get_line_data(void) {
 
 std::string FileReader::get_line_type(void) {
     return line_type;
-}
-
-std::string FileReader::get_line_size(void) {
-    return line_size;
 }

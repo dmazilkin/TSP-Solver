@@ -24,8 +24,8 @@ int main(int argc, char* argv[]) {
         std::cout << "ERROR! Exiting with error code..." << std::endl;
         return EXIT_FAILURE;
     }
-    
-    file_read_status_t content_status = reader.read_content(parser.get_cfg(), content);
+
+    file_read_status_t content_status = reader.read_content(parser.get_input(), content);
 
     if (content_status != FILE_READER_SUCCESS) {
         std::cout << "ERROR! Exiting with error code..." << std::endl;
