@@ -12,9 +12,11 @@ class ArgParser {
       arg_parser_status_t parse(int argc, char* argv[]);
       std::string get_input(void);
       std::string get_output(void);
+      std::string get_cfg(void);
     private:
       std::string input;
       std::string output;
+      std::string cfg;
 };
 
 #endif //ARG_PARSER_H

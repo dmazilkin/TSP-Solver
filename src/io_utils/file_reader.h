@@ -7,8 +7,17 @@ typedef enum {
 } file_read_status_t;
 
 class FileReader {
+    private:
+        std::string line_type;
+        std::string line_size;
+        std::string line_data;
     public:
-        file_read_status_t read(std::string path, std::string &content);
+        FileReader(void);
+        file_read_status_t read_cfg(std::string file_path, std::string &config);
+        file_read_status_t read_content(std::string path, std::string &content);
+        std::string get_line_data(void);
+        std::string get_line_type(void);
+        std::string get_line_size(void);
 };
 
 #endif //FILE_READER_H
