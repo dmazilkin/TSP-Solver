@@ -3,9 +3,9 @@
 
 class FilePreprocessor {
     private:
-        void get_coords(std::string content, int size, std::vector<std::vector<int>> &coords);
+        void get_coords(std::string content, int size, std::vector<std::vector<float>> &coords);
     public:
-        void create_dist_matrix(std::string content, int size, std::vector<std::vector<int>> &dist);
+        void create_dist_matrix(std::string content, int size, std::vector<std::vector<float>> &dist);
 };
 
 #endif //FILE_PREPROCESSOR_H

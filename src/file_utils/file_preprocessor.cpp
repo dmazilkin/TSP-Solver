@@ -4,14 +4,20 @@
 
 #include "file_preprocessor.h"
 
-void FilePreprocessor::create_dist_matrix(std::string content, int size, std::vector<std::vector<int>> &dist) {
-    std::vector<std::vector<int>> coords(size, std::vector<int>(2, 0));
+void FilePreprocessor::create_dist_matrix(std::string content, int size, std::vector<std::vector<float>> &dist) {
+    std::vector<std::vector<float>> coords(size, std::vector<float>(2, 0.0));
     get_coords(content, size, coords);
 
-
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            float x = coords[i][0] - coords[j][0];
+            float y = coords[i][1] - coords[j][1];
+            dist[i][j] = std::sqrt(std::pow(x, 2) + std::pow(y, 2));
+        }
+    }
 }
 
-void FilePreprocessor::get_coords(std::string content, int size, std::vector<std::vector<int>> &coords) {
+void FilePreprocessor::get_coords(std::string content, int size, std::vector<std::vector<float>> &coords) {
     std::stringstream content_stream(content);
     std::string line;
     int row = 0;
