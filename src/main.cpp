@@ -1,7 +1,9 @@
 #include <iostream>
+#include <vector>
 
 #include "file_reader.h"
 #include "arg_parser.h"
+#include "file_preprocessor.h"
 
 int main(int argc, char* argv[]) {
     std::cout << "Hello, World!" << std::endl;
@@ -15,7 +17,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    /* Get file content */
+    /* Get configs and file content */
     std::string content;
     FileReader reader;
     file_read_status_t cfg_status = reader.read_cfg(parser.get_cfg(), content);
@@ -31,6 +33,12 @@ int main(int argc, char* argv[]) {
         std::cout << "ERROR! Exiting with error code..." << std::endl;
         return EXIT_FAILURE;
     }
+
+    /* Process file content */
+    int matrix_size = reader.get_data_size();
+    std::vector<std::vector<int>> dist(matrix_size, std::vector<int>(matrix_size, 0));
+    FilePreprocessor file_preprocessor;
+    file_preprocessor.create_dist_matrix(content, matrix_size, dist);
 
     return EXIT_SUCCESS;
 }
