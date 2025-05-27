@@ -6,6 +6,7 @@
 FileReader::FileReader(void) {
     line_type = "";
     line_data = "";
+    solver = "";
     data_size = 0;
 }
 
@@ -27,6 +28,10 @@ file_read_status_t FileReader::read_cfg(std::string path, std::string &config) {
 
         if (cfg == "type") {
             std::getline(file, line_type);
+        }
+
+        if (cfg == "solver") {
+            std::getline(file, solver);
         }
     }
 
@@ -68,6 +73,10 @@ std::string FileReader::get_line_data(void) {
 
 std::string FileReader::get_line_type(void) {
     return line_type;
+}
+
+std::string FileReader::get_solver(void) {
+    return solver;
 }
 
 int FileReader::get_data_size(void) {

@@ -10,6 +10,7 @@ class FileReader {
     private:
         std::string line_type;
         std::string line_data;
+        std::string solver;
         int data_size;
     public:
         FileReader(void);
@@ -17,6 +18,7 @@ class FileReader {
         file_read_status_t read_content(std::string path, std::string &content);
         std::string get_line_data(void);
         std::string get_line_type(void);
+        std::string get_solver(void);
         int get_data_size(void);
 };
 

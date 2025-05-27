@@ -4,6 +4,7 @@
 #include "file_reader.h"
 #include "arg_parser.h"
 #include "file_preprocessor.h"
+#include "tsp_solver.h"
 
 int main(int argc, char* argv[]) {
     std::cout << "Hello, World!" << std::endl;
@@ -39,6 +40,9 @@ int main(int argc, char* argv[]) {
     std::vector<std::vector<float>> dist(matrix_size, std::vector<float>(matrix_size, 0.0));
     FilePreprocessor file_preprocessor;
     file_preprocessor.create_dist_matrix(content, matrix_size, dist);
+
+    /* Initialize provided solver and start it */
+    SolverContext solver_context;
 
     return EXIT_SUCCESS;
 }
