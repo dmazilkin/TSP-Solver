@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
     file_preprocessor.create_dist_matrix(content, matrix_size, dist);
 
     /* Initialize provided solver and start it */
-    SolverContext solver_context;
+    TSPContext tsp_context;
 
     return EXIT_SUCCESS;
 }

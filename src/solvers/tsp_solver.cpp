@@ -4,34 +4,45 @@
 #include "tsp_solver.h"
 #include "genetic_algorithm.h"
 
-static const std::vector<std::string> SOLVERS = { "GENERIC" };
+static const std::vector<std::string> SOLVERS = { "GENETIC" };
 
-TSPContext::TSPContext(std::string solver) {
-    status = check_solver(solver);
+/******************** PUBLIC ********************/
+TSPContext::TSPContext(void) {
+    context_status = CONTEXT_SOLVER_UNDEFINED;
+    context_solver = nullptr;
+}
 
-    if (status) {
-        context_solver = get_context_solver(solver);
+TSPContext::TSPContext(std::string solver_name) {
+    set_context_solver(solver_name);
+}
+
+void TSPContext::set_context_solver(std::string solver_name) {
+    solver_name_status_t solver_name_status = check_solver_name_(solver_name);
+
+    if (solver_name_status == SOLVER_AVAILABLE) {
+        set_context_solver_(solver_name);
+        context_status = CONTEXT_SOLVER_DEFINED;
+    }
+    else {
+        context_status = CONTEXT_SOLVER_UNDEFINED;
     }
 }
 
-bool TSPContext::check_solver(std::string solver) {
-    bool has_solver = false;
+/******************** PRIVATE ********************/
+solver_name_status_t TSPContext::check_solver_name_(std::string solver) {
+    solver_name_status_t has_solver = SOLVER_UNAVAILABLE;
 
-    for (int i = 0; i < solvers.size(); ++i) {
-        if (solver == solvers[i]) {
-            has_solver = true;
+    for (int i = 0; i < SOLVERS.size(); ++i) {
+        if (solver == SOLVERS[i]) {
+            has_solver = SOLVER_AVAILABLE;
         }
     }
 
     return has_solver;
 }
 
-TSPSolver& TSPContext::get_context_solver(std::string solver) {
-    switch (solver) {
-        case "GENETIC":
-            return GeneticAlgorithm();
-        else:
-            /* Should never happen */
-            break;
-  }
+void TSPContext::set_context_solver_(std::string solver) {
+    if (solver == "GENETIC") {
+        context_solver = std::make_unique<GeneticAlgorithm>();
+    }
 }
