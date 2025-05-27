@@ -28,6 +28,10 @@ void TSPContext::set_context_solver(std::string solver_name) {
     }
 }
 
+void TSPContext::solve(std::vector<std::vector<float>> dist) {
+    context_solver->solve(dist);
+}
+
 /******************** PRIVATE ********************/
 solver_name_status_t TSPContext::check_solver_name_(std::string solver) {
     solver_name_status_t has_solver = SOLVER_UNAVAILABLE;
@@ -45,4 +49,8 @@ void TSPContext::set_context_solver_(std::string solver) {
     if (solver == "GENETIC") {
         context_solver = std::make_unique<GeneticAlgorithm>();
     }
+}
+
+context_solver_status_t TSPContext::get_context_solver_status(void) {
+    return context_status;
 }
