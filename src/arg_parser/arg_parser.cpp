@@ -3,31 +3,32 @@
 #include "arg_parser.h"
 
 ArgParser::ArgParser(void) {
-    input = "";
-    output = "";
+    this->input = "";
+    this->output = "";
+    this->cfg = "";
 }
 
 arg_parser_status_t ArgParser::parse(int argc, char* argv[]) {
     for (int i = 1; i < argc; i++) {
         if (argv[i][0] == '-') {
             if (argv[i][1] == 'i') {
-                input = argv[i+1];
+                this->input = argv[i+1];
             }
             else if (argv[i][1] == 'o') {
-                output = argv[i+1];
+                this->output = argv[i+1];
             }
             else if (argv[i][1] == 'c') {
-                cfg = argv[i+1];
+                this->cfg = argv[i+1];
             }
             else if (argv[i][1] == '-') {
                 if (argv[i][2] == 'i') {
-                    input = argv[i+1];
+                    this->input = argv[i+1];
                 }
                 else if (argv[i][2] == 'o') {
-                    output = argv[i+1];
+                    this->output = argv[i+1];
                 }
                 else if (argv[i][2] == 'c') {
-                    cfg = argv[i+1];
+                    this->cfg = argv[i+1];
                 }
                 else {
                     std::cout << "ERROR! Unknown option: " << argv[i] << '.' << std::endl;
@@ -60,14 +61,14 @@ arg_parser_status_t ArgParser::parse(int argc, char* argv[]) {
 }
 
 std::string ArgParser::get_input(void) {
-  return input;
+  return this->input;
 }
 
 std::string ArgParser::get_cfg(void) {
-    return cfg;
+    return this->cfg;
 }
 
 std::string ArgParser::get_output(void) {
-  return output;
+  return this->output;
 }
 
