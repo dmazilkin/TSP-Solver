@@ -6,13 +6,26 @@
 #include "genetic_algorithm.h"
 #include "tsp_solver.h"
 
+/******************** DEFINES ********************/
 #define POPULATION_SIZE 100
+
+/******************** STATIC FUNCTIONS DECLARATION ********************/
+static bool compare_populations(individual_t& ind1, individual_t& ind2);
 
 /******************** PUBLIC ********************/
 void GeneticAlgorithm::solve(std::vector<std::vector<float>> dist)
 {
     std::vector<std::vector<int>> population = initialize_population_(POPULATION_SIZE, dist.size());
-    std::vector<float> population_fitness = calc_fitness_(population, dist);
+    std::vector<individual_t> fitness_population = calc_fitness_(population, dist);
+    std::vector<individual_t> new_generation = crossover(fitness_population);
+
+    for (int i = 0; i < POPULATION_SIZE; i++) {
+        for (int j = 0; j < new_generation[0].gens.size(); j++) {
+            std::cout << new_generation[0].gens[j] << " ";
+        }
+        std::cout << std::endl;
+        std::cout << "Fitness: " << new_generation[i].fitness << std::endl;
+    }
 }
 
 /******************** PRIVATE ********************/
@@ -34,27 +47,37 @@ std::vector<std::vector<int>> GeneticAlgorithm::initialize_population_ (int popu
     return population;
 }
 
-std::vector<float> GeneticAlgorithm::calc_fitness_ (std::vector<std::vector<int>> population, std::vector<std::vector<float>> dist)
+std::vector<individual_t> GeneticAlgorithm::calc_fitness_ (std::vector<std::vector<int>> population, std::vector<std::vector<float>> dist)
 {
-    std::vector<float> fitness (POPULATION_SIZE, 0);
+    std::vector<individual_t> fitness_population(POPULATION_SIZE);
 
     for (int i = 0; i < POPULATION_SIZE; i++) {
-
+        fitness_population[i].gens = population[i];
         for (int j = 0; j < population[0].size(); j++) {
 
             if (j == POPULATION_SIZE - 1) {
                 int current = population[i][j];
                 int next = population[i][0];
-                fitness[i] += dist[current][next];
+                fitness_population[i].fitness += dist[current][next];
             }
 
             int current = population[i][j];
             int next = population[i][j + 1];
-            fitness[i] += dist[current][next];
+            fitness_population[i].fitness += dist[current][next];
         }
     }
 
-    std::sort(fitness.begin(), fitness.end());
+    return fitness_population;
+}
 
-    return fitness;
+std::vector<individual_t> GeneticAlgorithm::crossover (std::vector<individual_t> fitness_population)
+{
+    std::sort(fitness_population.begin(), fitness_population.end(), compare_populations);
+
+    return fitness_population;
+}
+
+static bool compare_populations(individual_t& ind1, individual_t& ind2)
+{
+    return ind1.fitness <= ind2.fitness;
 }
