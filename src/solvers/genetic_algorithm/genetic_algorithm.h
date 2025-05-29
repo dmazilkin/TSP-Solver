@@ -6,6 +6,7 @@
 #include "tsp_solver.h"
 
 typedef struct {
+    float distance;
     float fitness;
     std::vector<int> gens;
 } individual_t;
