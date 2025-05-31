@@ -8,6 +8,7 @@
 typedef struct {
     float distance;
     float fitness;
+    float cumulative_fitness;
     std::vector<int> gens;
 } individual_t;
 
