@@ -15,7 +15,7 @@ typedef enum {
 
 class TSPSolver {
     public:
-        virtual void solve(std::vector<std::vector<float>> dist) = 0;
+        virtual void solve(std::vector<std::vector<float>> &dist) = 0;
         virtual ~TSPSolver() = default;
 };
 
@@ -31,7 +31,7 @@ class TSPContext {
         TSPContext(std::string solver_name);
         void set_context_solver(std::string solver_name);
         context_solver_status_t get_context_solver_status(void);
-        void solve(std::vector<std::vector<float>> dist);
+        void solve(std::vector<std::vector<float>> &dist);
 };
 
 #endif //TSP_SOLVER_H

@@ -28,7 +28,7 @@ void TSPContext::set_context_solver(std::string solver_name) {
     }
 }
 
-void TSPContext::solve(std::vector<std::vector<float>> dist) {
+void TSPContext::solve(std::vector<std::vector<float>> &dist) {
     this->context_solver->solve(dist);
 }
 
