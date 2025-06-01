@@ -8,6 +8,8 @@
 
 /******************** DEFINES ********************/
 #define POPULATION_SIZE 100
+#define PARENTS_COUNT 2
+#define SAVE_WITHOUT_CHANGES 5
 
 /******************** STATIC FUNCTIONS DECLARATION ********************/
 static bool compare_populations(individual_t& ind1, individual_t& ind2);
@@ -17,7 +19,7 @@ void GeneticAlgorithm::solve(std::vector<std::vector<float>> dist)
 {
     std::vector<std::vector<int>> population = initialize_population_(POPULATION_SIZE, dist.size());
     std::vector<individual_t> fitness_population = calc_fitness_(population, dist);
-    std::vector<individual_t> new_generation = crossover(fitness_population);
+    std::vector<individual_t> new_generation = crossover_(fitness_population);
 
 //    for (int i = 0; i < POPULATION_SIZE; i++) {
 //        for (int j = 0; j < fitness_population[i].gens.size(); j++) {
@@ -50,7 +52,15 @@ std::vector<std::vector<int>> GeneticAlgorithm::initialize_population_ (int popu
 
 std::vector<individual_t> GeneticAlgorithm::calc_fitness_ (std::vector<std::vector<int>> population, std::vector<std::vector<float>> dist)
 {
-    std::vector<individual_t> fitness_population(POPULATION_SIZE);
+    std::vector<individual_t> fitness_population(POPULATION_SIZE,
+        {
+            .distance=0.0,
+            .fitness=0.0,
+            .cumulative_fitness=0.0,
+            .gens={ 0 },
+        }
+     );
+
     float max_dist = 0.0;
 
     for (int i = 0; i < POPULATION_SIZE; i++) {
@@ -84,7 +94,7 @@ std::vector<individual_t> GeneticAlgorithm::calc_fitness_ (std::vector<std::vect
     return fitness_population;
 }
 
-std::vector<individual_t> GeneticAlgorithm::crossover(std::vector<individual_t> fitness_population)
+std::vector<individual_t> GeneticAlgorithm::crossover_(std::vector<individual_t> fitness_population)
 {
     int fitness_sum = POPULATION_SIZE * (fitness_population[0].fitness + fitness_population[POPULATION_SIZE - 1].fitness) / 2;
 
@@ -98,46 +108,7 @@ std::vector<individual_t> GeneticAlgorithm::crossover(std::vector<individual_t> 
         }
     }
 
-    std::random_device rd;
-    std::mt19937 g(rd());
-    std::uniform_real_distribution<float> roulette_wheel(0, 100);
-    float first_cumulative = roulette_wheel(g);
-    float second_cumulative = roulette_wheel(g);
-    individual_t first_parent;
-    individual_t second_parent;
-    bool first_found = false;
-    bool second_found = false;
-    int first_ind = 0;
-    int second_ind = 0;
-
-    while (!first_found and (first_ind < POPULATION_SIZE)) {
-        if (fitness_population[first_ind].cumulative_fitness > first_cumulative) {
-            first_parent = fitness_population[first_ind];
-            first_found = true;
-        }
-        else {
-            first_ind++;
-        }
-    }
-
-    while (!second_found and (second_ind < POPULATION_SIZE)) {
-        if (fitness_population[second_ind].cumulative_fitness > second_cumulative) {
-            second_parent = fitness_population[second_ind];
-            second_found = true;
-        }
-        else {
-            second_ind++;
-        }
-    }
-
-    std::cout << first_cumulative << std::endl;
-    std::cout << first_ind << std::endl;
-    std::cout << first_parent.distance << " " << first_parent.fitness << " " << first_parent.cumulative_fitness << std::endl;
-
-    std::cout << second_cumulative << std::endl;
-    std::cout << second_ind << std::endl;
-    std::cout << second_parent.distance << " " << second_parent.fitness << " " << second_parent.cumulative_fitness << std::endl;
-
+    std::vector<parent_t> parents = select_parents_(fitness_population);
 
     return fitness_population;
 }
@@ -145,4 +116,41 @@ std::vector<individual_t> GeneticAlgorithm::crossover(std::vector<individual_t> 
 static bool compare_populations(individual_t& ind1, individual_t& ind2)
 {
     return ind1.distance <= ind2.distance;
+}
+
+std::vector<parent_t> GeneticAlgorithm::select_parents_(std::vector<individual_t> population)
+{
+    /* Configure random uniform device */
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::uniform_real_distribution<float> roulette_wheel(0, 100);
+    /* Select parents for new child */
+    std::vector<parent_t> parents(PARENTS_COUNT,
+        {
+            .is_found=false,
+            .individual={
+                .distance=0.0,
+                .fitness=0.0,
+                .cumulative_fitness=0.0,
+                .gens={ 0 },
+            },
+        }
+    );
+
+    for (int i = 0; i < PARENTS_COUNT; i++) {
+        int ind = 0;
+        float cumulative_fitness = roulette_wheel(g);
+
+        while (!parents[i].is_found and (ind < POPULATION_SIZE)) {
+            if (population[ind].cumulative_fitness >= cumulative_fitness) {
+                parents[i].individual = population[ind];
+                parents[i].is_found = true;
+            }
+            else {
+                ind++;
+            }
+        }
+    }
+
+    return parents;
 }
