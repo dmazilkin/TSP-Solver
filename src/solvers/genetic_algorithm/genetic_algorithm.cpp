@@ -8,8 +8,10 @@
 
 /******************** DEFINES ********************/
 #define POPULATION_SIZE 100
+#define ROULUTTE_WHEEL_MIN 0
+#define ROULUTTE_WHEEL_MAX 100
 #define PARENTS_COUNT 2
-#define SAVE_WITHOUT_CHANGES 5
+#define BEST_COUNT 5
 
 /******************** STATIC FUNCTIONS DECLARATION ********************/
 static bool compare_populations(individual_t& ind1, individual_t& ind2);
@@ -19,21 +21,24 @@ void GeneticAlgorithm::solve(std::vector<std::vector<float>> &dist)
 {
     /* Initialize population */
     std::vector<individual_t> population = initialize_population_(dist);
+    calc_fitness_(population, dist);
     /* Generate new population */
     std::vector<individual_t> new_generation = crossover_(population);
+//    calc_fitness_(new_generation, dist);
 
     for (int i = 0; i < POPULATION_SIZE; i++) {
-        for (int j = 0; j < population[i].gens.size(); j++) {
-            std::cout << population[i].gens[j] << " ";
+        for (int j = 0; j < new_generation[i].gens.size(); j++) {
+            std::cout << new_generation[i].gens[j] << " ";
         }
         std::cout << std::endl;
-        std::cout << "Fitness: " << population[i].fitness << std::endl;
-        std::cout << "Distance: " << population[i].distance << std::endl;
+        std::cout << "Fitness: " << new_generation[i].fitness << std::endl;
+        std::cout << "Distance: " << new_generation[i].distance << std::endl;
+        std::cout << "Percentage: " << new_generation[i].cumulative_fitness << std::endl;
     }
 }
 
 /******************** PRIVATE ********************/
-std::vector<individual_t> GeneticAlgorithm::initialize_population_ (std::vector<std::vector<float>> &dist)
+std::vector<individual_t> GeneticAlgorithm::initialize_population_(std::vector<std::vector<float>> &dist)
 {
     int individual_size = dist.size();
     std::vector<individual_t> population(POPULATION_SIZE,
@@ -56,12 +61,11 @@ std::vector<individual_t> GeneticAlgorithm::initialize_population_ (std::vector<
         std::shuffle(population[i].gens.begin(), population[i].gens.end(), g);
     }
 
-    calc_fitness_(population, dist);
 
     return population;
 }
 
-void GeneticAlgorithm::calc_fitness_ (std::vector<individual_t> &population, std::vector<std::vector<float>> &dist)
+void GeneticAlgorithm::calc_fitness_(std::vector<individual_t> &population, std::vector<std::vector<float>> &dist)
 {
     float max_dist = 0.0;
     int individual_size = dist.size();
@@ -91,25 +95,47 @@ void GeneticAlgorithm::calc_fitness_ (std::vector<individual_t> &population, std
     for (int i = 0; i < POPULATION_SIZE; i++) {
         population[i].fitness = POPULATION_SIZE - i;
     }
-}
 
-std::vector<individual_t> GeneticAlgorithm::crossover_(std::vector<individual_t> fitness_population)
-{
-    int fitness_sum = POPULATION_SIZE * (fitness_population[0].fitness + fitness_population[POPULATION_SIZE - 1].fitness) / 2;
+    int fitness_sum = POPULATION_SIZE * (population[0].fitness + population[POPULATION_SIZE - 1].fitness) / 2;
 
     for (int i = 0; i < POPULATION_SIZE; i++) {
-        fitness_population[i].fitness = 100 * fitness_population[i].fitness / fitness_sum;
+        population[i].fitness = 100 * population[i].fitness / fitness_sum;
         if (i == 0) {
-            fitness_population[i].cumulative_fitness = fitness_population[i].fitness;
+            population[i].cumulative_fitness = population[i].fitness;
         }
         else {
-            fitness_population[i].cumulative_fitness = fitness_population[i-1].cumulative_fitness + fitness_population[i].fitness;
+            population[i].cumulative_fitness = population[i-1].cumulative_fitness + population[i].fitness;
         }
     }
+}
 
-    std::vector<parent_t> parents = select_parents_(fitness_population);
+std::vector<individual_t> GeneticAlgorithm::crossover_(std::vector<individual_t> &population)
+{
+    int individual_size = population[0].gens.size();
+    std::vector<individual_t> new_generation(POPULATION_SIZE,
+        {
+            .distance=0,
+            .fitness=0,
+            .cumulative_fitness=0,
+            .gens=std::vector<int>(individual_size, 0),
+        }
+    );
 
-    return fitness_population;
+    /* Save first best individuals without changes */
+    for (int i = 0; i < BEST_COUNT; i++) {
+        new_generation[i].distance = population[i].distance;
+        new_generation[i].gens = population[i].gens;
+    }
+
+    /* Create new individuals from existed */
+    for (int i = BEST_COUNT; i < POPULATION_SIZE; i++) {
+        /* Select parents using uniform distribution */
+        std::vector<parent_t> parents = select_parents_(population);
+        std::vector<int> child = generate_child_(parents);
+        new_generation[i].gens = child;
+    }
+
+    return new_generation;
 }
 
 static bool compare_populations(individual_t& ind1, individual_t& ind2)
@@ -117,12 +143,12 @@ static bool compare_populations(individual_t& ind1, individual_t& ind2)
     return ind1.distance <= ind2.distance;
 }
 
-std::vector<parent_t> GeneticAlgorithm::select_parents_(std::vector<individual_t> population)
+std::vector<parent_t> GeneticAlgorithm::select_parents_(std::vector<individual_t> &population)
 {
     /* Configure random uniform device */
     std::random_device rd;
     std::mt19937 g(rd());
-    std::uniform_real_distribution<float> roulette_wheel(0, 100);
+    std::uniform_real_distribution<float> roulette_wheel(ROULUTTE_WHEEL_MIN, ROULUTTE_WHEEL_MAX);
     /* Select parents for new child */
     std::vector<parent_t> parents(PARENTS_COUNT,
         {
@@ -152,4 +178,62 @@ std::vector<parent_t> GeneticAlgorithm::select_parents_(std::vector<individual_t
     }
 
     return parents;
+}
+
+std::vector<int> GeneticAlgorithm::generate_child_(std::vector<parent_t> &parents)
+{
+    int individual_size = parents[0].individual.gens.size();
+    std::vector<int> child(individual_size, 0);
+
+    /* Generate gens range to inherite from first parent */
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::uniform_int_distribution<int> range_boundary(0, individual_size);
+    int first_parent_start = range_boundary(g);
+    int first_parent_stop = range_boundary(g);
+
+    if (first_parent_start > first_parent_stop) {
+        int temp = first_parent_start;
+        first_parent_start = first_parent_stop;
+        first_parent_stop = temp;
+    }
+
+    /* Inherite gens from first parent */
+    for (int i = first_parent_start; i < first_parent_stop; i++) {
+        child[i] = parents[0].individual.gens[i];
+    }
+
+    /* Inherite gens from second parent */
+    int new_gen_ind = 0;
+    int parent_gen_ind = 0;
+
+    while (new_gen_ind < first_parent_stop) {
+        if (!((new_gen_ind >= first_parent_start) and (new_gen_ind < first_parent_stop))) {
+            int gen = parents[1].individual.gens[parent_gen_ind];
+
+            while (has_gen_(child, gen, first_parent_start, first_parent_stop)) {
+                parent_gen_ind++;
+            }
+
+            child[new_gen_ind] = gen;
+            parent_gen_ind++;
+        }
+
+        new_gen_ind++;
+    }
+
+    return child;
+}
+
+bool GeneticAlgorithm::has_gen_(std::vector<int> &gens, int gen, int start, int stop)
+{
+    bool found = false;
+    int ind = start;
+
+    while ((ind < stop) or found) {
+        found = gen == gens[ind];
+        ind++;
+    }
+
+    return found;
 }
