@@ -12,11 +12,11 @@
 #define ROULUTTE_WHEEL_MAX 100
 #define PARENTS_COUNT 2
 #define BEST_COUNT 10
-#define MAX_EPOCHS 200
+#define MAX_EPOCHS 500
 #define UNDEFINED -1
 
 /******************** STATIC FUNCTIONS DECLARATION ********************/
-static bool compare_populations(individual_t& ind1, individual_t& ind2);
+static bool compare_populations(individual_t &ind1, individual_t  &ind2);
 
 /******************** PUBLIC ********************/
 void GeneticAlgorithm::solve(std::vector<std::vector<float>> &dist)
@@ -24,15 +24,21 @@ void GeneticAlgorithm::solve(std::vector<std::vector<float>> &dist)
     /* Initialize population */
     std::vector<individual_t> population = initialize_population_(dist);
     calc_fitness_(population, dist);
+    for (int i = 0; i < POPULATION_SIZE; i++) {
+        std::cout << population[i].distance << std::endl;
+    }
+    std::cout << "----------------------------" << std::endl;
     /* Start Genetic Algorithm */
-    std::vector<individual_t> new_generation = crossover_(population);
-    calc_fitness_(population, dist);
     for (int i = 0; i < MAX_EPOCHS; i++) {
         /* Generate new population */
-        std::cout << "Epoch=" << i << std::endl;
-        new_generation = crossover_(population);
+        std::vector<individual_t> new_generation = crossover_(population);
         calc_fitness_(new_generation, dist);
         population = new_generation;
+        if (i == MAX_EPOCHS - 1) {
+            for (int i = 0; i < POPULATION_SIZE; i++) {
+                std::cout << population[i].distance << std::endl;
+            }
+        }
     }
 }
 
@@ -122,7 +128,6 @@ std::vector<individual_t> GeneticAlgorithm::crossover_(std::vector<individual_t>
 
     /* Save first best individuals without changes */
     for (int i = 0; i < BEST_COUNT; i++) {
-        new_generation[i].distance = population[i].distance;
         new_generation[i].gens = population[i].gens;
     }
 
@@ -137,9 +142,9 @@ std::vector<individual_t> GeneticAlgorithm::crossover_(std::vector<individual_t>
     return new_generation;
 }
 
-static bool compare_populations(individual_t& ind1, individual_t& ind2)
+static bool compare_populations(individual_t &ind1, individual_t &ind2)
 {
-    return ind1.distance <= ind2.distance;
+    return ind1.distance < ind2.distance;
 }
 
 std::vector<parent_t> GeneticAlgorithm::select_parents_(std::vector<individual_t> &population)
@@ -188,7 +193,7 @@ std::vector<int> GeneticAlgorithm::generate_child_(std::vector<parent_t> &parent
     /* Generate gens range to inherite from first parent */
     std::random_device rd;
     std::mt19937 g(rd());
-    std::uniform_int_distribution<int> range_boundary(0, individual_size);
+    std::uniform_int_distribution<int> range_boundary(0, individual_size-1);
     int first_parent_start = range_boundary(g);
     int first_parent_stop = range_boundary(g);
 
