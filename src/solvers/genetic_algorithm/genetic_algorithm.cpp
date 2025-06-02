@@ -11,7 +11,9 @@
 #define ROULUTTE_WHEEL_MIN 0
 #define ROULUTTE_WHEEL_MAX 100
 #define PARENTS_COUNT 2
-#define BEST_COUNT 5
+#define BEST_COUNT 10
+#define MAX_EPOCHS 200
+#define UNDEFINED -1
 
 /******************** STATIC FUNCTIONS DECLARATION ********************/
 static bool compare_populations(individual_t& ind1, individual_t& ind2);
@@ -22,18 +24,15 @@ void GeneticAlgorithm::solve(std::vector<std::vector<float>> &dist)
     /* Initialize population */
     std::vector<individual_t> population = initialize_population_(dist);
     calc_fitness_(population, dist);
-    /* Generate new population */
+    /* Start Genetic Algorithm */
     std::vector<individual_t> new_generation = crossover_(population);
-//    calc_fitness_(new_generation, dist);
-
-    for (int i = 0; i < POPULATION_SIZE; i++) {
-        for (int j = 0; j < new_generation[i].gens.size(); j++) {
-            std::cout << new_generation[i].gens[j] << " ";
-        }
-        std::cout << std::endl;
-        std::cout << "Fitness: " << new_generation[i].fitness << std::endl;
-        std::cout << "Distance: " << new_generation[i].distance << std::endl;
-        std::cout << "Percentage: " << new_generation[i].cumulative_fitness << std::endl;
+    calc_fitness_(population, dist);
+    for (int i = 0; i < MAX_EPOCHS; i++) {
+        /* Generate new population */
+        std::cout << "Epoch=" << i << std::endl;
+        new_generation = crossover_(population);
+        calc_fitness_(new_generation, dist);
+        population = new_generation;
     }
 }
 
@@ -46,9 +45,9 @@ std::vector<individual_t> GeneticAlgorithm::initialize_population_(std::vector<s
             .distance=0,
             .fitness=0,
             .cumulative_fitness=0,
-            .gens=std::vector<int>(individual_size, 0),
+            .gens=std::vector<int>(individual_size, UNDEFINED),
         }
-     );
+    );
 
     for (int i = 0; i < POPULATION_SIZE; i++) {
 
@@ -73,21 +72,21 @@ void GeneticAlgorithm::calc_fitness_(std::vector<individual_t> &population, std:
     for (int i = 0; i < POPULATION_SIZE; i++) {
         for (int j = 0; j < individual_size; j++) {
 
-            if (j == POPULATION_SIZE - 1) {
+            if (j == individual_size - 1) {
                 int current = population[i].gens[j];
                 int next = population[i].gens[0];
                 population[i].distance += dist[current][next];
             }
-
-            int current = population[i].gens[j];
-            int next = population[i].gens[j + 1];
-            population[i].distance += dist[current][next];
+            else {
+                int current = population[i].gens[j];
+                int next = population[i].gens[j + 1];
+                population[i].distance += dist[current][next];
+            }
         }
 
         if (population[i].distance > max_dist) {
             max_dist = population[i].distance;
         }
-
     }
 
     std::sort(population.begin(), population.end(), compare_populations);
@@ -117,7 +116,7 @@ std::vector<individual_t> GeneticAlgorithm::crossover_(std::vector<individual_t>
             .distance=0,
             .fitness=0,
             .cumulative_fitness=0,
-            .gens=std::vector<int>(individual_size, 0),
+            .gens=std::vector<int>(individual_size, UNDEFINED),
         }
     );
 
@@ -150,6 +149,7 @@ std::vector<parent_t> GeneticAlgorithm::select_parents_(std::vector<individual_t
     std::mt19937 g(rd());
     std::uniform_real_distribution<float> roulette_wheel(ROULUTTE_WHEEL_MIN, ROULUTTE_WHEEL_MAX);
     /* Select parents for new child */
+    int individual_size = population[0].gens.size();
     std::vector<parent_t> parents(PARENTS_COUNT,
         {
             .is_found=false,
@@ -157,7 +157,7 @@ std::vector<parent_t> GeneticAlgorithm::select_parents_(std::vector<individual_t
                 .distance=0.0,
                 .fitness=0.0,
                 .cumulative_fitness=0.0,
-                .gens={ 0 },
+                .gens=std::vector<int>(individual_size, UNDEFINED),
             },
         }
     );
@@ -183,7 +183,7 @@ std::vector<parent_t> GeneticAlgorithm::select_parents_(std::vector<individual_t
 std::vector<int> GeneticAlgorithm::generate_child_(std::vector<parent_t> &parents)
 {
     int individual_size = parents[0].individual.gens.size();
-    std::vector<int> child(individual_size, 0);
+    std::vector<int> child(individual_size, UNDEFINED);
 
     /* Generate gens range to inherite from first parent */
     std::random_device rd;
@@ -199,41 +199,56 @@ std::vector<int> GeneticAlgorithm::generate_child_(std::vector<parent_t> &parent
     }
 
     /* Inherite gens from first parent */
+    std::vector<int> gens_from_first(first_parent_stop - first_parent_start, UNDEFINED);
+    int gens_ind = 0;
+
     for (int i = first_parent_start; i < first_parent_stop; i++) {
         child[i] = parents[0].individual.gens[i];
+        gens_from_first[gens_ind] = parents[0].individual.gens[i];
+        gens_ind++;
     }
 
     /* Inherite gens from second parent */
-    int new_gen_ind = 0;
-    int parent_gen_ind = 0;
-
-    while (new_gen_ind < first_parent_stop) {
-        if (!((new_gen_ind >= first_parent_start) and (new_gen_ind < first_parent_stop))) {
-            int gen = parents[1].individual.gens[parent_gen_ind];
-
-            while (has_gen_(child, gen, first_parent_start, first_parent_stop)) {
-                parent_gen_ind++;
-            }
-
-            child[new_gen_ind] = gen;
-            parent_gen_ind++;
-        }
-
-        new_gen_ind++;
-    }
+    std::vector<int> parent_gens = get_unique_gens(parents[1].individual.gens, gens_from_first);
+    child = fill_child_gens_(child, parent_gens);
 
     return child;
 }
 
-bool GeneticAlgorithm::has_gen_(std::vector<int> &gens, int gen, int start, int stop)
+std::vector<int> GeneticAlgorithm::get_unique_gens(std::vector<int> parent, std::vector<int> child)
 {
-    bool found = false;
-    int ind = start;
+    int unique_count = parent.size() - child.size();
+    std::vector<int> unique_gens(unique_count, UNDEFINED);
+    int unique_ind = 0;
 
-    while ((ind < stop) or found) {
-        found = gen == gens[ind];
-        ind++;
+    for (int i = 0; i < parent.size(); i++) {
+        bool is_unique = true;
+        int child_ind = 0;
+
+        while (is_unique and child_ind < child.size()) {
+            is_unique = parent[i] != child[child_ind];
+            child_ind++;
+        }
+
+        if (is_unique) {
+            unique_gens[unique_ind] = parent[i];
+            unique_ind++;
+        }
     }
 
-    return found;
+    return unique_gens;
+}
+
+std::vector<int> GeneticAlgorithm::fill_child_gens_(std::vector<int> &child, std::vector<int> parent)
+{
+    int parent_ind = 0;
+
+    for (int i = 0; i < child.size(); i++) {
+        if (child[i] == UNDEFINED) {
+            child[i] = parent[parent_ind];
+            parent_ind++;
+        }
+    }
+
+    return child;
 }
