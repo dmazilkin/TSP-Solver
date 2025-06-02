@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <map>
 
 #include "file_reader.h"
 #include "arg_parser.h"
@@ -18,7 +19,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    /* Get configs and file content */
+    /* Read common configs and specific solver configs */
     std::string content;
     FileReader reader;
     file_read_status_t cfg_status = reader.read_cfg(parser.get_cfg(), content);
@@ -28,6 +29,14 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    file_read_status_t solver_cfg_status = reader.read_solver_cfg();
+
+    if (solver_cfg_status != FILE_READER_SUCCESS) {
+        std::cout << "ERROR! Exiting with error code..." << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    /* Read content */
     file_read_status_t content_status = reader.read_content(parser.get_input(), content);
 
     if (content_status != FILE_READER_SUCCESS) {
