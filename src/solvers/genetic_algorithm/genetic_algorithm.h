@@ -31,7 +31,7 @@ class GeneticAlgorithm : public TSPSolver {
         std::vector<parent_t> select_parents_(std::vector<individual_t> &population);
     public:
         GeneticAlgorithm();
-        void solve(std::vector<std::vector<float>> &dist) override;
+        solution_t solve(std::vector<std::vector<float>> &dist) override;
         configs_status_t configure_solver(std::map<std::string, int> solver_configs) override;
 };
 

@@ -54,27 +54,30 @@ configs_status_t GeneticAlgorithm::configure_solver(std::map<std::string, int> s
     return SOLVER_CONFIGS_OK;
 }
 
-void GeneticAlgorithm::solve(std::vector<std::vector<float>> &dist)
+solution_t GeneticAlgorithm::solve(std::vector<std::vector<float>> &dist)
 {
+    solution_t best_solution = {
+        .distance = 0.0,
+        .gens = { 0 },
+    };
     /* Initialize population */
     std::vector<individual_t> population = initialize_population_(dist);
     calc_fitness_(population, dist);
-    for (int i = 0; i < this->configs_table["POPULATION_SIZE"]; i++) {
-        std::cout << population[i].distance << std::endl;
-    }
-    std::cout << "----------------------------" << std::endl;
+
     /* Start Genetic Algorithm */
     for (int i = 0; i < this->configs_table["MAX_EPOCHS"]; i++) {
         /* Generate new population */
         std::vector<individual_t> new_generation = crossover_(population);
         calc_fitness_(new_generation, dist);
         population = new_generation;
+
         if (i == this->configs_table["MAX_EPOCHS"] - 1) {
-            for (int i = 0; i < this->configs_table["POPULATION_SIZE"]; i++) {
-                std::cout << population[i].distance << std::endl;
-            }
+            best_solution.distance = population[0].distance;
+            best_solution.gens = population[0].gens;
         }
     }
+
+    return best_solution;
 }
 
 /******************** PRIVATE ********************/

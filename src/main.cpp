@@ -8,7 +8,7 @@
 #include "tsp_solver.h"
 
 int main(int argc, char* argv[]) {
-    std::cout << "Hello, World!" << std::endl;
+    std::cout << "TSP Solver started." << std::endl;
 
     /* Parse arguments */
     ArgParser parser;
@@ -53,15 +53,28 @@ int main(int argc, char* argv[]) {
     /* Initialize provided solver and start it */
     TSPContext tsp_context;
     tsp_context.set_context_solver(reader.get_solver());
-    tsp_context.set_solver_configs(reader.get_solver_cfg());
-    configs_status_t config_status = tsp_context.get_configs_status();
 
-    if (config_status != SOLVER_CONFIGS_OK) {
+    if (tsp_context.get_context_solver_status() != CONTEXT_SOLVER_DEFINED) {
         std::cout << "ERROR! Exiting with error code..." << std::endl;
         return EXIT_FAILURE;
     }
 
-    tsp_context.solve(dist);
+    tsp_context.set_solver_configs(reader.get_solver_cfg());
+
+    if (tsp_context.get_configs_status() != SOLVER_CONFIGS_OK) {
+        std::cout << "ERROR! Exiting with error code..." << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    solution_t found_solution = tsp_context.solve(dist);
+
+    /* Print solution */
+    std::cout << "Found solution:" << std::endl;
+    for (int i = 0; i < found_solution.gens.size(); i++) {
+            std::cout << found_solution.gens[i] << " ";
+    }
+    std::cout << std::endl;
+    std::cout << "Distance = " << found_solution.distance << std::endl;
 
     return EXIT_SUCCESS;
 }

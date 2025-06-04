@@ -35,12 +35,9 @@ void TSPContext::set_solver_configs(std::map<std::string, int> solver_configs)
     this->configs_status = this->context_solver->configure_solver(solver_configs);
 }
 
-void TSPContext::solve(std::vector<std::vector<float>> &dist) {
-    if (this->context_solver != nullptr) {
-        this->context_solver->solve(dist);
-    }
+solution_t TSPContext::solve(std::vector<std::vector<float>> &dist) {
+    return this->context_solver->solve(dist);
 }
-
 
 context_solver_status_t TSPContext::get_context_solver_status(void) {
     return this->context_status;

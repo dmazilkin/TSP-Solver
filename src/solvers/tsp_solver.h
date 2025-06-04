@@ -19,10 +19,15 @@ typedef enum {
     SOLVER_UNAVAILABLE,
 } solver_name_status_t;
 
+typedef struct {
+    float distance;
+    std::vector<int> gens;
+} solution_t;
+
 class TSPSolver {
     public:
         virtual ~TSPSolver() = default;
-        virtual void solve(std::vector<std::vector<float>> &dist) = 0;
+        virtual solution_t solve(std::vector<std::vector<float>> &dist) = 0;
         virtual configs_status_t configure_solver(std::map<std::string, int> solver_configs) = 0;
 };
 
@@ -41,7 +46,7 @@ class TSPContext {
         context_solver_status_t get_context_solver_status(void);
         void set_solver_configs(std::map<std::string, int> solver_configs);
         configs_status_t get_configs_status(void);
-        void solve(std::vector<std::vector<float>> &dist);
+        solution_t solve(std::vector<std::vector<float>> &dist);
 };
 
 #endif //TSP_SOLVER_H
