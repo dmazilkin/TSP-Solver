@@ -53,6 +53,14 @@ int main(int argc, char* argv[]) {
     /* Initialize provided solver and start it */
     TSPContext tsp_context;
     tsp_context.set_context_solver(reader.get_solver());
+    tsp_context.set_solver_configs(reader.get_solver_cfg());
+    configs_status_t config_status = tsp_context.get_configs_status();
+
+    if (config_status != SOLVER_CONFIGS_OK) {
+        std::cout << "ERROR! Exiting with error code..." << std::endl;
+        return EXIT_FAILURE;
+    }
+
     tsp_context.solve(dist);
 
     return EXIT_SUCCESS;

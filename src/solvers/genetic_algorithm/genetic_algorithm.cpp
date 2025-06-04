@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <map>
 #include <random>
 #include <algorithm>
 
@@ -7,35 +8,69 @@
 #include "tsp_solver.h"
 
 /******************** DEFINES ********************/
-#define POPULATION_SIZE 100
 #define ROULUTTE_WHEEL_MIN 0
 #define ROULUTTE_WHEEL_MAX 100
 #define PARENTS_COUNT 2
-#define BEST_COUNT 10
-#define MAX_EPOCHS 500
 #define UNDEFINED -1
 
 /******************** STATIC FUNCTIONS DECLARATION ********************/
 static bool compare_populations(individual_t &ind1, individual_t  &ind2);
 
+/******************** STATIC VARIABLES ********************/
+
 /******************** PUBLIC ********************/
+GeneticAlgorithm::GeneticAlgorithm(void)
+{
+    this->configs_table = {
+        { "POPULATION_SIZE", UNDEFINED },
+        { "MAX_EPOCHS", UNDEFINED },
+        { "BEST_TO_SAVE", UNDEFINED },
+    };
+}
+
+configs_status_t GeneticAlgorithm::configure_solver(std::map<std::string, int> solver_configs)
+{
+    configs_status_t configs_status = SOLVER_CONFIGS_OK;
+    std::map<std::string, int>::iterator configs_it = this->configs_table.begin();
+
+    while ((configs_status == SOLVER_CONFIGS_OK) and (configs_it != this->configs_table.end())) {
+        std::string config = configs_it->first;
+
+        if (solver_configs.contains(config)) {
+            configs_it->second = solver_configs[config];
+        }
+        else {
+            configs_status = SOLVER_CONFIGS_ERROR;
+        }
+
+        configs_it++;
+    }
+
+    if (configs_status == SOLVER_CONFIGS_ERROR) {
+        std::cout << "ERROR! Required config for Genetic Algorithm not found!" << std::endl;
+        return SOLVER_CONFIGS_ERROR;
+    }
+
+    return SOLVER_CONFIGS_OK;
+}
+
 void GeneticAlgorithm::solve(std::vector<std::vector<float>> &dist)
 {
     /* Initialize population */
     std::vector<individual_t> population = initialize_population_(dist);
     calc_fitness_(population, dist);
-    for (int i = 0; i < POPULATION_SIZE; i++) {
+    for (int i = 0; i < this->configs_table["POPULATION_SIZE"]; i++) {
         std::cout << population[i].distance << std::endl;
     }
     std::cout << "----------------------------" << std::endl;
     /* Start Genetic Algorithm */
-    for (int i = 0; i < MAX_EPOCHS; i++) {
+    for (int i = 0; i < this->configs_table["MAX_EPOCHS"]; i++) {
         /* Generate new population */
         std::vector<individual_t> new_generation = crossover_(population);
         calc_fitness_(new_generation, dist);
         population = new_generation;
-        if (i == MAX_EPOCHS - 1) {
-            for (int i = 0; i < POPULATION_SIZE; i++) {
+        if (i == this->configs_table["MAX_EPOCHS"] - 1) {
+            for (int i = 0; i < this->configs_table["POPULATION_SIZE"]; i++) {
                 std::cout << population[i].distance << std::endl;
             }
         }
@@ -46,7 +81,7 @@ void GeneticAlgorithm::solve(std::vector<std::vector<float>> &dist)
 std::vector<individual_t> GeneticAlgorithm::initialize_population_(std::vector<std::vector<float>> &dist)
 {
     int individual_size = dist.size();
-    std::vector<individual_t> population(POPULATION_SIZE,
+    std::vector<individual_t> population(this->configs_table["POPULATION_SIZE"],
         {
             .distance=0,
             .fitness=0,
@@ -55,7 +90,7 @@ std::vector<individual_t> GeneticAlgorithm::initialize_population_(std::vector<s
         }
     );
 
-    for (int i = 0; i < POPULATION_SIZE; i++) {
+    for (int i = 0; i < this->configs_table["POPULATION_SIZE"]; i++) {
 
         for (int j = 0; j < individual_size; j++) {
             population[i].gens[j] = j;
@@ -75,7 +110,7 @@ void GeneticAlgorithm::calc_fitness_(std::vector<individual_t> &population, std:
     float max_dist = 0.0;
     int individual_size = dist.size();
 
-    for (int i = 0; i < POPULATION_SIZE; i++) {
+    for (int i = 0; i < this->configs_table["POPULATION_SIZE"]; i++) {
         for (int j = 0; j < individual_size; j++) {
 
             if (j == individual_size - 1) {
@@ -97,13 +132,13 @@ void GeneticAlgorithm::calc_fitness_(std::vector<individual_t> &population, std:
 
     std::sort(population.begin(), population.end(), compare_populations);
 
-    for (int i = 0; i < POPULATION_SIZE; i++) {
-        population[i].fitness = POPULATION_SIZE - i;
+    for (int i = 0; i < this->configs_table["POPULATION_SIZE"]; i++) {
+        population[i].fitness = this->configs_table["POPULATION_SIZE"] - i;
     }
 
-    int fitness_sum = POPULATION_SIZE * (population[0].fitness + population[POPULATION_SIZE - 1].fitness) / 2;
+    int fitness_sum = this->configs_table["POPULATION_SIZE"] * (population[0].fitness + population[this->configs_table["POPULATION_SIZE"] - 1].fitness) / 2;
 
-    for (int i = 0; i < POPULATION_SIZE; i++) {
+    for (int i = 0; i < this->configs_table["POPULATION_SIZE"]; i++) {
         population[i].fitness = 100 * population[i].fitness / fitness_sum;
         if (i == 0) {
             population[i].cumulative_fitness = population[i].fitness;
@@ -117,7 +152,7 @@ void GeneticAlgorithm::calc_fitness_(std::vector<individual_t> &population, std:
 std::vector<individual_t> GeneticAlgorithm::crossover_(std::vector<individual_t> &population)
 {
     int individual_size = population[0].gens.size();
-    std::vector<individual_t> new_generation(POPULATION_SIZE,
+    std::vector<individual_t> new_generation(this->configs_table["POPULATION_SIZE"],
         {
             .distance=0,
             .fitness=0,
@@ -127,12 +162,12 @@ std::vector<individual_t> GeneticAlgorithm::crossover_(std::vector<individual_t>
     );
 
     /* Save first best individuals without changes */
-    for (int i = 0; i < BEST_COUNT; i++) {
+    for (int i = 0; i < this->configs_table["BEST_TO_SAVE"]; i++) {
         new_generation[i].gens = population[i].gens;
     }
 
     /* Create new individuals from existed */
-    for (int i = BEST_COUNT; i < POPULATION_SIZE; i++) {
+    for (int i = this->configs_table["BEST_TO_SAVE"]; i < this->configs_table["POPULATION_SIZE"]; i++) {
         /* Select parents using uniform distribution */
         std::vector<parent_t> parents = select_parents_(population);
         std::vector<int> child = generate_child_(parents);
@@ -171,7 +206,7 @@ std::vector<parent_t> GeneticAlgorithm::select_parents_(std::vector<individual_t
         int ind = 0;
         float cumulative_fitness = roulette_wheel(g);
 
-        while (!parents[i].is_found and (ind < POPULATION_SIZE)) {
+        while (!parents[i].is_found and (ind < this->configs_table["POPULATION_SIZE"])) {
             if (population[ind].cumulative_fitness >= cumulative_fitness) {
                 parents[i].individual = population[ind];
                 parents[i].is_found = true;

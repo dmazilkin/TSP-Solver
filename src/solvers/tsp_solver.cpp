@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <map>
 
 #include "tsp_solver.h"
 #include "genetic_algorithm.h"
@@ -9,6 +10,7 @@ static const std::vector<std::string> SOLVERS = { "GENETIC" };
 /******************** PUBLIC ********************/
 TSPContext::TSPContext(void) {
     this->context_status = CONTEXT_SOLVER_UNDEFINED;
+    this->configs_status = SOLVER_CONFIGS_OK;
     this->context_solver = nullptr;
 }
 
@@ -28,8 +30,24 @@ void TSPContext::set_context_solver(std::string solver_name) {
     }
 }
 
+void TSPContext::set_solver_configs(std::map<std::string, int> solver_configs)
+{
+    this->configs_status = this->context_solver->configure_solver(solver_configs);
+}
+
 void TSPContext::solve(std::vector<std::vector<float>> &dist) {
-    this->context_solver->solve(dist);
+    if (this->context_solver != nullptr) {
+        this->context_solver->solve(dist);
+    }
+}
+
+
+context_solver_status_t TSPContext::get_context_solver_status(void) {
+    return this->context_status;
+}
+
+configs_status_t TSPContext::get_configs_status(void) {
+    return this->configs_status;
 }
 
 /******************** PRIVATE ********************/
@@ -49,8 +67,4 @@ void TSPContext::set_context_solver_(std::string solver) {
     if (solver == "GENETIC") {
         this->context_solver = std::make_unique<GeneticAlgorithm>();
     }
-}
-
-context_solver_status_t TSPContext::get_context_solver_status(void) {
-    return this->context_status;
 }
