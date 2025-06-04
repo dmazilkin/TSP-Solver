@@ -15,5 +15,6 @@ INC = -Isrc/file_utils \
 TARGET = build/tsp_solver
 
 all: $(SRC)
+	clear
 	$(GCC) $(CFLAGS) $(INC) -o $(TARGET) $^
 

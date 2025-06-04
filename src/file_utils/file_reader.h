@@ -23,8 +23,8 @@ class FileReader {
         std::string get_line_data(void);
         std::string get_line_type(void);
         std::string get_solver(void);
-        int get_data_size(void);
         std::map<std::string, int> get_solver_cfg(void);
+        int get_data_size(void);
 };
 
 #endif //FILE_READER_H

@@ -4,7 +4,7 @@
 
 #include "file_reader.h"
 
-static std::string SOLVER_CONFIG_PATH = "configs/";
+static const std::string SOLVER_CONFIG_PATH = "configs/";
 
 FileReader::FileReader(void)
 {
