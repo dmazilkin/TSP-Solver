@@ -50,13 +50,6 @@ solution_t SimulatedAnnealing::solve(std::vector<std::vector<float>> &dist)
     candidate_t candidate = initialize_candidate_(dist);
     calc_distance_(candidate, dist);
 
-    std::cout << "Forst candidate:" << std::endl;
-    for (int i = 0; i < candidate.gens.size(); i++) {
-            std::cout << candidate.gens[i] << " ";
-    }
-    std::cout << std::endl;
-    std::cout << "Distance = " << candidate.distance << std::endl;
-
     for (int i = 0; i < this->configs_table["MAX_EPOCHS"]; i++) {
         candidate_t neighbour = generate_neighbour_(candidate);
         calc_distance_(neighbour, dist);

@@ -6,6 +6,7 @@
 #include "arg_parser.h"
 #include "file_preprocessor.h"
 #include "tsp_solver.h"
+#include "file_writer.h"
 
 int main(int argc, char* argv[]) {
     std::cout << "TSP Solver started." << std::endl;
@@ -68,13 +69,16 @@ int main(int argc, char* argv[]) {
 
     solution_t found_solution = tsp_context.solve(dist);
 
-    /* Print solution */
-    std::cout << "Found solution:" << std::endl;
-    for (int i = 0; i < found_solution.gens.size(); i++) {
-            std::cout << found_solution.gens[i] << " ";
+    /* Save solution */
+    FileWriter writer;
+    file_write_status_t writer_status = writer.write_solution(found_solution, parser.get_output());
+
+    if (writer_status != FILE_WRITER_SUCCESS) {
+        std::cout << "ERROR! Exiting with error code..." << std::endl;
+        return EXIT_FAILURE;
     }
-    std::cout << std::endl;
-    std::cout << "Distance = " << found_solution.distance << std::endl;
+
+    std::cout << "Solution found! Exiting TSP Solver..." << std::endl;
 
     return EXIT_SUCCESS;
 }
