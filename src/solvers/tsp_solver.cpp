@@ -4,8 +4,9 @@
 
 #include "tsp_solver.h"
 #include "genetic_algorithm.h"
+#include "simulated_annealing.h"
 
-static const std::vector<std::string> SOLVERS = { "GENETIC" };
+static const std::vector<std::string> SOLVERS = { "GENETIC", "SIMULATED_ANNEALING" };
 
 /******************** PUBLIC ********************/
 TSPContext::TSPContext(void) {
@@ -63,5 +64,9 @@ solver_name_status_t TSPContext::check_solver_name_(std::string solver_name) {
 void TSPContext::set_context_solver_(std::string solver) {
     if (solver == "GENETIC") {
         this->context_solver = std::make_unique<GeneticAlgorithm>();
+    }
+
+    if (solver == "SIMULATED_ANNEALING") {
+        this->context_solver = std::make_unique<SimulatedAnnealing>();
     }
 }

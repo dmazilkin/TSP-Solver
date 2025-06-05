@@ -157,8 +157,8 @@ std::vector<individual_t> GeneticAlgorithm::crossover_(std::vector<individual_t>
     int individual_size = population[0].gens.size();
     std::vector<individual_t> new_generation(this->configs_table["POPULATION_SIZE"],
         {
-            .distance=0,
-            .fitness=0,
+            .distance=0.0,
+            .fitness=0.0,
             .cumulative_fitness=0,
             .gens=std::vector<int>(individual_size, UNDEFINED),
         }
