@@ -17,6 +17,8 @@ class SimulatedAnnealing : public TSPSolver {
         candidate_t initialize_candidate_(std::vector<std::vector<float>> &dist);
         void calc_distance_(candidate_t &candidate, std::vector<std::vector<float>> &dist);
         candidate_t generate_neighbour_(candidate_t candidate);
+        candidate_t swap_(candidate_t candidate);
+        candidate_t two_opt_(candidate_t candidate);
         bool is_acceptable_(candidate_t &candidate, candidate_t &neighbour);
     public:
         SimulatedAnnealing();

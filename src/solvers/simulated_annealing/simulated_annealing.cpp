@@ -15,6 +15,7 @@ SimulatedAnnealing::SimulatedAnnealing(void)
         { "TEMPERATURE", UNDEFINED },
         { "TEMPERATURE_FACTOR", UNDEFINED },
         { "MAX_EPOCHS", UNDEFINED },
+        { "TEMPERATURE_BOUNDARY", UNDEFINED },
     };
 }
 
@@ -117,12 +118,22 @@ void SimulatedAnnealing::calc_distance_(candidate_t &candidate, std::vector<std:
 
 candidate_t SimulatedAnnealing::generate_neighbour_(candidate_t candidate)
 {   
+    if (this->configs_table["TEMPERATURE"] >= this->configs_table["TEMPERATURE_BOUNDARY"]) {
+        return swap_(candidate);
+    }
+    else {
+        return two_opt_(candidate);
+    }
+}
+
+candidate_t SimulatedAnnealing::swap_(candidate_t candidate)
+{
     candidate_t neighbour = {
         .distance = 0.0,
         .gens = candidate.gens,
     };
     int individual_size = candidate.gens.size();
-    /* Generate gens range to inherite from first parent */
+    /* Generate gens indeces to swap */
     std::random_device rd;
     std::mt19937 g(rd());
     std::uniform_int_distribution<int> gens_to_swap(0, individual_size-1);
@@ -132,6 +143,40 @@ candidate_t SimulatedAnnealing::generate_neighbour_(candidate_t candidate)
     int temp_gen = neighbour.gens[first_gen];
     neighbour.gens[first_gen] = neighbour.gens[second_gen];
     neighbour.gens[second_gen] = temp_gen;
+
+    return neighbour;
+}
+
+candidate_t SimulatedAnnealing::two_opt_(candidate_t candidate)
+{
+    int individual_size = candidate.gens.size();
+    candidate_t neighbour = {
+        .distance = 0.0,
+        .gens = candidate.gens,
+    };
+    /* Generate gens indeces to reverse path */
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::uniform_int_distribution<int> gens_to_reverse(0, individual_size-1);
+    int start_gen = gens_to_reverse(g);
+    int stop_gen = gens_to_reverse(g);
+
+    while (stop_gen == start_gen) {
+        stop_gen = gens_to_reverse(g);
+    }
+    
+
+    if (start_gen > stop_gen) {
+        int temp = start_gen;
+        start_gen = stop_gen;
+        stop_gen = temp;
+    }
+
+    for (int i = 0; i < (stop_gen - start_gen) / 2; i++) {
+        int temp = neighbour.gens[start_gen + i];
+        neighbour.gens[start_gen + i] = neighbour.gens[stop_gen - i];
+        neighbour.gens[stop_gen - i] = temp;
+    }
 
     return neighbour;
 }
